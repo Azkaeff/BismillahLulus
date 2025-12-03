@@ -11,6 +11,9 @@ public class KeranjangCounter : MonoBehaviour
     public GameObject panelKurang;
     public GameObject panelLebih;
     public GameObject panelSelesai;
+    
+    // UI Text to display the counter
+    public Text counterText;
 
     // Keep a set of unique items inside the basket to avoid double counts, or
     // counting across objects that have multiple colliders.
@@ -38,6 +41,7 @@ public class KeranjangCounter : MonoBehaviour
         if (currentItems.Add(go)) // returns true only if newly added
         {
             current = currentItems.Count;
+            UpdateCounterDisplay();
             Debug.Log($"Added {go.name} to basket. Count: {current}");
         }
     }
@@ -60,6 +64,7 @@ public class KeranjangCounter : MonoBehaviour
         if (currentItems.Remove(go))
         {
             current = currentItems.Count;
+            UpdateCounterDisplay();
             Debug.Log($"Removed {go.name} from basket. Count: {current}");
         }
     }
@@ -81,6 +86,7 @@ public class KeranjangCounter : MonoBehaviour
 
         // Keep non-negative
         current = Mathf.Max(0, current);
+        UpdateCounterDisplay();
         if (go == null)
             Debug.Log($"AddBuah called with null. Count: {current}");
     }
@@ -99,6 +105,7 @@ public class KeranjangCounter : MonoBehaviour
         {
             current = Mathf.Max(0, current - 1);
         }
+        UpdateCounterDisplay();
         if (go == null)
             Debug.Log($"RemoveBuah called with null. Count: {current}");
     }
@@ -130,5 +137,22 @@ public class KeranjangCounter : MonoBehaviour
         if (panelKurang != null) panelKurang.SetActive(false);
         if (panelLebih != null) panelLebih.SetActive(false);
         if (panelSelesai != null) panelSelesai.SetActive(false);
+        
+        // Initialize counter display
+        UpdateCounterDisplay();
+    }
+
+    private void LateUpdate()
+    {
+        // Keep counter display updated every frame to ensure visibility
+        UpdateCounterDisplay();
+    }
+
+    private void UpdateCounterDisplay()
+    {
+        if (counterText != null)
+        {
+            counterText.text = current.ToString();
+        }
     }
 }
