@@ -24,7 +24,16 @@ public class UIManager_Level2 : MonoBehaviour
     private void Start()
     {
         ShowTask("Susunlah bilangan dari yang paling kecil ke paling besar.");
-        HideHelp();
+        // Always show help when the level starts
+        if (helpPanel == null)
+        {
+            Debug.LogWarning("[UIManager_Level2] helpPanel is not assigned in the Inspector. Cannot auto-show help.");
+        }
+        else
+        {
+            ShowHelp();
+            Debug.Log("[UIManager_Level2] Auto-showing help on level start.");
+        }
         HideLevelComplete();
     }
 
