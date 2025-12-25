@@ -11,6 +11,12 @@ public class Number : MonoBehaviour
         UpdateNumberText();
     }
 
+    void OnValidate()
+    {
+        // Keep inspector visible value in sync while editing
+        UpdateNumberText();
+    }
+
     public void UpdateNumberText()
     {
         if (numberText == null)
@@ -31,5 +37,12 @@ public class Number : MonoBehaviour
         {
             numberText.text = "?";
         }
+    }
+
+    // Helper to change the value at runtime and update the UI
+    public void SetValue(int newValue)
+    {
+        value = newValue;
+        UpdateNumberText();
     }
 }
