@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Keranjang
   - Buah
+  - myPath
   layers:
   - Default
   - TransparentFX
