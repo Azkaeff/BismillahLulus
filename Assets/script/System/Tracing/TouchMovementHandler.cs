@@ -9,14 +9,8 @@ public class TouchMovementHandler : MonoBehaviour
     [HideInInspector] public GameObject PointerGO;
     public GameObject PointerPrefab;
     private Vector3 PointerPosition;
-    private Plane newPlane;
-    private float CalcRayDistance;
+    private Vector3 LastPointerPosition;
     public bool isAligned = false;
-    
-    [Header("Tolerance Settings")]
-    [SerializeField] private float pointerDetectionRadius = 0.3f;
-    private Vector3 lastValidPointerPos;
-    private bool isPointerMoving = false;
 
     private void Awake()
     {
@@ -25,7 +19,7 @@ public class TouchMovementHandler : MonoBehaviour
 
     void Start()
     {
-        newPlane = new Plane(Camera.main.transform.forward * 0.1f, transform.position);
+        LastPointerPosition = Vector3.zero;
     }
     private void Update()
     {
@@ -34,46 +28,34 @@ public class TouchMovementHandler : MonoBehaviour
     
     void PointerHandle()
     {
+        Vector3 screenPos = Input.mousePosition;
+        Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
+        worldPos.z = 0;
+
         if((Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) || (Input.GetMouseButtonDown(0)))
         {
-            Ray newRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-     
-            if(newPlane.Raycast(newRay, out CalcRayDistance))
-            {
-                PointerPosition = newRay.GetPoint(CalcRayDistance);
-                lastValidPointerPos = PointerPosition;
-                isPointerMoving = true;
-                PointerGO = Instantiate(PointerPrefab, PointerPosition, Quaternion.identity);
-            }
+            PointerPosition = worldPos;
+            LastPointerPosition = worldPos;
+            PointerGO = Instantiate(PointerPrefab, PointerPosition, Quaternion.identity);
         }
         else if ((Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) || Input.GetMouseButton(0))
         {
-            Ray newRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            
-            if(newPlane.Raycast(newRay, out CalcRayDistance))
+            if(PointerGO != null)
             {
-                Vector3 newPos = newRay.GetPoint(CalcRayDistance);
-                
-                if(PointerGO != null)
-                {
-                    // Smooth pointer movement with detection radius
-                    Vector3 direction = (newPos - lastValidPointerPos).normalized;
-                    float distance = Vector3.Distance(newPos, lastValidPointerPos);
-                    
-                    // Allow smooth movement within tolerance
-                    if(distance <= pointerDetectionRadius * 2f)
-                    {
-                        PointerGO.transform.position = newPos;
-                        lastValidPointerPos = newPos;
-                    }
-                    else
-                    {
-                        // Move incrementally if distance is large
-                        PointerGO.transform.position = lastValidPointerPos + direction * (pointerDetectionRadius * 2f);
-                        lastValidPointerPos = PointerGO.transform.position;
-                    }
-                }
+                LastPointerPosition = PointerPosition;
+                PointerPosition = worldPos;
+                PointerGO.transform.position = PointerPosition;
             }
         }
+    }
+
+    public Vector3 GetLastPointerPosition()
+    {
+        return LastPointerPosition;
+    }
+
+    public Vector3 GetCurrentPointerPosition()
+    {
+        return PointerPosition;
     }
 }

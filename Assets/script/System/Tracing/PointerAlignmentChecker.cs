@@ -5,98 +5,81 @@ using UnityEngine;
 public class PointerAlignmentChecker : MonoBehaviour
 {
     public GameObject myMask;
-    
-    [Header("Tolerance Settings")]
-    [SerializeField] private float alignmentTolerance = 0.5f;
-    [SerializeField] private float maxDisconnectDistance = 1.5f;
-    
-    private EdgeCollider2D pathCollider;
-    private Vector2 lastValidPosition;
-    private bool hasStartedTracing = false;
-    private float timeDisconnected = 0f;
-    private const float DISCONNECT_TIME_THRESHOLD = 0.3f;
+    public float spawnThreshold = 0.1f;
+    public float alignmentCheckRadius = 0.15f;
+
+    private Vector3 lastMaskPos = Vector3.zero;
+    private bool hasSpawnedMask = false;
+    private Collider2D pathCollider;
 
     void Start()
     {
-        pathCollider = GetComponent<EdgeCollider2D>();
-        if (pathCollider != null)
-        {
-            pathCollider.edgeRadius = alignmentTolerance;
-        }
+        // Cache collider reference
+        pathCollider = GetComponent<Collider2D>();
     }
 
     void Update()
     {
-        Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        pos.z = 0;
+        Vector3 currentPos = TouchMovementHandler.Instance.GetCurrentPointerPosition();
+        
+        // Gunakan distance-based check (lebih stabil dari trigger)
+        bool isInPath = CheckIfInPath(currentPos);
+        TouchMovementHandler.Instance.isAligned = isInPath;
 
-        // Track path continuity
-        if(TouchMovementHandler.Instance.isAligned)
+        if(TouchMovementHandler.Instance.isAligned && TouchMovementHandler.Instance.PointerGO != null)
         {
-            lastValidPosition = pos;
-            timeDisconnected = 0f;
-            hasStartedTracing = true;
+            Vector3 lastPos = TouchMovementHandler.Instance.GetLastPointerPosition();
             
-            GameObject go = Instantiate(myMask, pos, Quaternion.identity);
-            go.transform.SetParent(GameObject.Find("Masks").transform);
-        }
-        else if(hasStartedTracing)
-        {
-            // Allow small temporary disconnects with tolerance
-            timeDisconnected += Time.deltaTime;
+            float distance = Vector3.Distance(lastPos, currentPos);
             
-            if(timeDisconnected > DISCONNECT_TIME_THRESHOLD ||
-               Vector2.Distance(pos, lastValidPosition) > maxDisconnectDistance)
+            if(distance > spawnThreshold)
             {
-                // Path broken - player drifted too far
-                hasStartedTracing = false;
-                timeDisconnected = 0f;
+                int steps = Mathf.Max(1, (int)(distance / spawnThreshold));
+                
+                for(int i = 0; i <= steps; i++)
+                {
+                    float t = steps > 0 ? (float)i / steps : 0;
+                    Vector3 spawnPos = Vector3.Lerp(lastPos, currentPos, t);
+                    
+                    GameObject go = Instantiate(myMask, spawnPos, Quaternion.identity);
+                    go.transform.SetParent(GameObject.Find("Masks").transform);
+                }
+                
+                hasSpawnedMask = true;
+                lastMaskPos = currentPos;
             }
         }
 
         if(Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
         {
-            DestroyPointer();
-            hasStartedTracing = false;
-            timeDisconnected = 0f;
+            ClearPointer();
         }
     }
 
-    private void OnTriggerEnter2D (Collider2D collision)
+    private bool CheckIfInPath(Vector3 position)
     {
-        if(collision.gameObject.tag == "myPath")
+        // Method 1: Gunakan Physics2D.OverlapPoint (lebih akurat)
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(position, alignmentCheckRadius);
+        
+        foreach(Collider2D col in colliders)
         {
-           TouchMovementHandler.Instance.isAligned = true;
-        }
-    }
-
-    private void OnTriggerExit2D (Collider2D collision)
-    {
-        if(collision.gameObject.tag == "myPath")
-        {
-            if(TouchMovementHandler.Instance.isAligned)
+            if(col.CompareTag("myPath"))
             {
-                TouchMovementHandler.Instance.isAligned = false;
+                return true;
             }
         }
+        
+        return false;
     }
 
-    void DestroyPointer()
+    void ClearPointer()
     {
         if(TouchMovementHandler.Instance.PointerGO != null)
         {
-            if(GameObject.Find("Masks").transform.childCount > 0)
-            {
-                foreach(Transform child in GameObject.Find("Masks").transform)
-                {
-                    Destroy(child.gameObject);
-                }
-            }
-                
             Destroy(TouchMovementHandler.Instance.PointerGO);
+            TouchMovementHandler.Instance.PointerGO = null;
         }
+        
+        hasSpawnedMask = false;
     }
-    
-    public bool IsContinuouslyTracing => hasStartedTracing;
-    public float GetDisconnectTime => timeDisconnected;
 }
