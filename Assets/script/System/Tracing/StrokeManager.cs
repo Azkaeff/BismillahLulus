@@ -98,12 +98,37 @@ public class StrokeManager : MonoBehaviour
     private void HandleValidatingState()
     {
         // Validate stroke sesuai dengan path
-        bool isValid = strokeValidator.ValidateStroke(currentStroke);
+        var alignmentPerPath = strokeValidator.CalculateAlignmentPerPath(currentStroke);
         
-        if(isValid)
+        if (alignmentPerPath.Count > 0)
         {
-            currentStroke.SetState(TracingStrokeData.StrokeState.Completed);
-            OnStrokeSuccess();
+            // Find the path with the highest alignment
+            GameObject bestPath = null;
+            float bestScore = 0f;
+            foreach (var kvp in alignmentPerPath)
+            {
+                if (kvp.Value > bestScore)
+                {
+                    bestScore = kvp.Value;
+                    bestPath = kvp.Key;
+                }
+            }
+            
+            if (bestPath != null && bestScore >= strokeValidator.GetMinAlignmentPercentage())
+            {
+                currentStroke.SetAlignmentScore(bestScore);
+                currentStroke.SetState(TracingStrokeData.StrokeState.Completed);
+                
+                // Update path fill
+                PathGenerateHandler.Instance.UpdatePathFill(bestPath, bestScore);
+                
+                OnStrokeSuccess();
+            }
+            else
+            {
+                currentStroke.SetState(TracingStrokeData.StrokeState.Failed);
+                OnStrokeFailed();
+            }
         }
         else
         {

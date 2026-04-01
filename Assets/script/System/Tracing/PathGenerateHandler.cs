@@ -11,6 +11,9 @@ public class PathGenerateHandler : MonoBehaviour
     public GameObject LinePathPrefab;
     public Transform SpawnPoint;
     public int theCurrentNumber;
+    
+    private Dictionary<GameObject, float> pathFills = new Dictionary<GameObject, float>();
+    public GameObject completionUI; // Assign in inspector
 
     private void Awake()
     {
@@ -106,5 +109,47 @@ public class PathGenerateHandler : MonoBehaviour
         {
             myListOfPaths[i-1].GetComponent<PathDrawer>().MyCurrentNumber = i;
         }    
+    }
+    public void UpdatePathFill(GameObject pathGO, float alignmentScore)
+    {
+        if (!pathFills.ContainsKey(pathGO))
+        {
+            pathFills[pathGO] = 0f;
+        }
+        
+        // Add the alignment score to the fill (assuming each stroke contributes)
+        pathFills[pathGO] += alignmentScore;
+        pathFills[pathGO] = Mathf.Clamp01(pathFills[pathGO]);
+        
+        // If fill reaches 75%+, set to 100%
+        if (pathFills[pathGO] >= 0.75f)
+        {
+            pathFills[pathGO] = 1.0f;
+        }
+        
+        CheckCompletion();
+    }
+    
+    private void CheckCompletion()
+    {
+        bool allComplete = true;
+        foreach (var path in myListOfPaths)
+        {
+            if (!pathFills.ContainsKey(path) || pathFills[path] < 1.0f)
+            {
+                allComplete = false;
+                break;
+            }
+        }
+        
+        if (allComplete && completionUI != null)
+        {
+            completionUI.SetActive(true);
+        }
+    }
+    
+    public float GetPathFill(GameObject pathGO)
+    {
+        return pathFills.ContainsKey(pathGO) ? pathFills[pathGO] : 0f;
     }
 }
