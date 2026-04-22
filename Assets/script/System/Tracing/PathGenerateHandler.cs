@@ -12,6 +12,9 @@ public class PathGenerateHandler : MonoBehaviour
     public Transform SpawnPoint;
     public int theCurrentNumber;
     
+    [Tooltip("Minimum number of paths required to complete the level. If 0, requires all paths.")]
+    public int minimumPathsToComplete = 0;
+    
     private Dictionary<GameObject, float> pathFills = new Dictionary<GameObject, float>();
     public GameObject completionUI; // Assign in inspector
 
@@ -132,20 +135,54 @@ public class PathGenerateHandler : MonoBehaviour
     
     private void CheckCompletion()
     {
-        bool allComplete = true;
+        int completedCount = 0;
         foreach (var path in myListOfPaths)
         {
-            if (!pathFills.ContainsKey(path) || pathFills[path] < 1.0f)
+            if (pathFills.ContainsKey(path) && pathFills[path] >= 1.0f)
             {
-                allComplete = false;
-                break;
+                completedCount++;
             }
         }
         
-        if (allComplete && completionUI != null)
+        int targetCount = minimumPathsToComplete > 0 ? minimumPathsToComplete : myListOfPaths.Count;
+        
+        if (completedCount >= targetCount && completedCount > 0)
         {
-            completionUI.SetActive(true);
+            if (StageManagerLv4.Instance != null)
+            {
+                StageManagerLv4.Instance.CompleteStage();
+                return;
+            }
+
+            if (completionUI != null)
+            {
+                completionUI.SetActive(true);
+            }
+            else
+            {
+                // Fallback: cari otomatis GameObject dengan nama "ThisIsLevelCompleteUI" yang mungkin inactive
+                foreach (GameObject rootGo in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                {
+                    Transform found = FindDeepChild(rootGo.transform, "ThisIsLevelCompleteUI");
+                    if (found != null)
+                    {
+                        found.gameObject.SetActive(true);
+                        break;
+                    }
+                }
+            }
         }
+    }
+
+    private Transform FindDeepChild(Transform parent, string name)
+    {
+        if (parent.name == name) return parent;
+        foreach (Transform child in parent)
+        {
+            Transform result = FindDeepChild(child, name);
+            if (result != null) return result;
+        }
+        return null;
     }
     
     public float GetPathFill(GameObject pathGO)

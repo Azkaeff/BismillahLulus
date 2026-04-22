@@ -69,6 +69,28 @@ public class StageManager : MonoBehaviour
             int stars = stageInfo != null ? stageInfo.letters.Count : 0;
             completeStagePanel.Show(stars, ReplayStage, GoToNextStage);
         }
+        
+        // Coba aktifkan ThisIsLevelCompleteUI jika ada di scene
+        foreach (GameObject rootGo in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+        {
+            Transform found = FindDeepChild(rootGo.transform, "ThisIsLevelCompleteUI");
+            if (found != null)
+            {
+                found.gameObject.SetActive(true);
+                break;
+            }
+        }
+    }
+
+    private Transform FindDeepChild(Transform parent, string name)
+    {
+        if (parent.name == name) return parent;
+        foreach (Transform child in parent)
+        {
+            Transform result = FindDeepChild(child, name);
+            if (result != null) return result;
+        }
+        return null;
     }
 
     // Called by TraceManager when a letter finishes (alternative path)
