@@ -11,6 +11,7 @@ public class PathGenerateHandler : MonoBehaviour
     public GameObject LinePathPrefab;
     public Transform SpawnPoint;
     public int theCurrentNumber;
+    public int totalTracedPaths = 0;
     
     [Tooltip("Minimum number of paths required to complete the level. If 0, requires all paths.")]
     public int minimumPathsToComplete = 0;
@@ -130,15 +131,20 @@ public class PathGenerateHandler : MonoBehaviour
             pathFills[pathGO] = 1.0f;
         }
         
+        if (alignmentScore >= 0.75f)
+        {
+            totalTracedPaths++;
+        }
+        
         CheckCompletion();
     }
     
     private void CheckCompletion()
     {
         int completedCount = 0;
-        foreach (var path in myListOfPaths)
+        foreach (var fill in pathFills.Values)
         {
-            if (pathFills.ContainsKey(path) && pathFills[path] >= 1.0f)
+            if (fill >= 1.0f)
             {
                 completedCount++;
             }
@@ -146,7 +152,25 @@ public class PathGenerateHandler : MonoBehaviour
         
         int targetCount = minimumPathsToComplete > 0 ? minimumPathsToComplete : myListOfPaths.Count;
         
-        if (completedCount >= targetCount && completedCount > 0)
+        bool isComplete = false;
+        if (minimumPathsToComplete > 0)
+        {
+            isComplete = (totalTracedPaths >= targetCount || completedCount >= targetCount);
+        }
+        else
+        {
+            int listCompletedCount = 0;
+            foreach (var path in myListOfPaths)
+            {
+                if (pathFills.ContainsKey(path) && pathFills[path] >= 1.0f)
+                {
+                    listCompletedCount++;
+                }
+            }
+            isComplete = (listCompletedCount >= targetCount && listCompletedCount > 0);
+        }
+        
+        if (isComplete)
         {
             if (StageManagerLv4.Instance != null)
             {

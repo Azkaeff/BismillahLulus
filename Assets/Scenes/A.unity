@@ -1165,7 +1165,7 @@ GameObject:
   - component: {fileID: 1123316943}
   - component: {fileID: 1123316942}
   - component: {fileID: 1123316941}
-  - component: {fileID: 1123316944}
+  - component: {fileID: 1123316945}
   m_Layer: 5
   m_Name: PrevButton
   m_TagString: Untagged
@@ -1236,9 +1236,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1123316944}
-        m_TargetAssemblyTypeName: ButtonBackMenu, Assembly-CSharp
-        m_MethodName: LoadTargetScene
+      - m_Target: {fileID: 1123316945}
+        m_TargetAssemblyTypeName: ScenePanelOpener, Assembly-CSharp
+        m_MethodName: OpenSceneAndPanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1286,7 +1286,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1123316939}
   m_CullTransparentMesh: 1
---- !u!114 &1123316944
+--- !u!114 &1123316945
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1295,10 +1295,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1123316939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f53b34434c14c64988ee8f5ff0cb398, type: 3}
+  m_Script: {fileID: 11500000, guid: c7b49a298b3b82a42be7903469a5d8c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   targetSceneName: MainMenu
+  targetPanelName: MC1
 --- !u!1 &1162665662
 GameObject:
   m_ObjectHideFlags: 0
@@ -2168,6 +2169,7 @@ MonoBehaviour:
   LinePathPrefab: {fileID: 5870596623817692673, guid: 9b3d951c92199834f862dd61e87f07d9, type: 3}
   SpawnPoint: {fileID: 202300995}
   theCurrentNumber: 3
+  totalTracedPaths: 0
   minimumPathsToComplete: 3
   completionUI: {fileID: 1794091079}
 --- !u!1 &1502272842
