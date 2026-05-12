@@ -49,7 +49,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             transform.SetParent(startParent);
         }
 
-        
         Debug.Log("Dropped item, checking level state...");
         // per level logic
         if (GameManager_LEVEL2.Instance != null)
@@ -57,6 +56,12 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             Debug.Log("Updating numbers and checking answers for Level 2...");
             GameManager_LEVEL2.Instance.UpdateNumbers();
             GameManager_LEVEL2.Instance.CheckNumbers();
+        }
+
+        if (GameManager_Level1.Instance != null)
+        {
+            Debug.Log("Checking answers for Level 1...");
+            GameManager_Level1.Instance.CheckResult();
         }
     }
 
